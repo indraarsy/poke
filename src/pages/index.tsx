@@ -64,7 +64,7 @@ export default function Home() {
 
   return (
     <>
-      <title>{curPage === 0 ? "Blogs" : `Blogs Page ${curPage}`}</title>
+      <title>{curPage === 0 ? "Pokemon" : `Pokemon Page ${curPage}`}</title>
       <main
         className={`flex min-h-screen flex-col items-center justify-between px-0 md:px-24`}
       >
