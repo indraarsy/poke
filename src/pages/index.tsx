@@ -1,34 +1,12 @@
-import Image from "next/image";
-import { Inter } from "next/font/google";
 import { trpc } from "@/utils/trpc";
+import Image from "next/image";
 import Link from "next/link"
-import { InputHTMLAttributes, useState } from "react"
-
-const inter = Inter({ subsets: ["latin"] });
-
-type Post = {
-  id: number;
-  user_id: number;
-  title: string;
-  body: string;
-}
-
-type Pokemon = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: {
-    name: string;
-    url: string;
-  }[]
-}
+import React, { useState } from "react"
 
 export default function Home() {
-  const [curPage, setCurPage] = useState<number>(1)
-
   const [formData, setFormData] = useState({
     name: '',
-    limit: 0
+    limit: 1000
   });
 
   const handleChange = (e: React.FormEvent<HTMLInputElement>) => {
@@ -36,41 +14,26 @@ export default function Home() {
     setFormData({ ...formData, limit: formData.name === '' ? 0 : 10000, [name]: value });
   };
 
-  const pokemon = trpc.getPokemons.useQuery<Pokemon>({
-    page: curPage,
+  const pokemon = trpc.getPokemons.useQuery({
+    page: 1,
     name: formData.name,
     limit: formData.limit
   }, {
-    onSuccess: (resp) => {
-      console.log(formData)
-      if (formData.name !== '') {
-        console.log('woi')
-      } else {
-        console.log('cok')
-        return resp
-      }
-
-      return {
-        count: resp.count,
-        next: resp.next,
-        previous: resp.previous,
-        results: []
-      }
-    }
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   })
 
-  const filteredPokemon = formData.name === '' ? pokemon.data?.results.splice(0, 12) : pokemon.data?.results.filter((item) => item.name.includes(formData.name))
-  console.log(filteredPokemon)
+  const filteredPokemon = formData.name === '' ? pokemon.data : pokemon.data?.filter((item) => item.name.includes(formData.name))
 
   return (
     <>
-      <title>{curPage === 0 ? "Pokemon" : `Pokemon Page ${curPage}`}</title>
+      <title>Pokedex</title>
       <main
-        className={`flex min-h-screen flex-col items-center justify-between px-0 md:px-24`}
+        className={`px-4 pt-12 pb-4 bg-gradient-to-r from-red-50 to-green-50 via-blue-50 min-h-screen`}
       >
-        <div className="mx-auto max-w-2xl relative min-h-screen lg:max-w-5xl dark:bg-zinc-900 p-12 w-full">
+        <div className="mx-auto max-w-2xl relative min-h-screen lg:max-w-5xl p-12 w-full">
           <header className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">Pokemon List</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl">Pokemon List</h1>
           </header>
           <div className="mt-4">
             <input
@@ -80,7 +43,7 @@ export default function Home() {
               value={formData.name}
               onChange={handleChange}
               placeholder="Search Pokemon"
-              className="w-full border border-neutral-700 rounded-lg p-4 bg-gray-200 dark:bg-zinc-800"
+              className="w-full border border-neutral-700 rounded-lg p-4 bg-gray-200 text-black"
               required
             />
           </div>
@@ -95,37 +58,28 @@ export default function Home() {
                 >
               </div>
             )}
-            {filteredPokemon && filteredPokemon.map((item, index) => (
-              <Link
-                key={item.name}
-                href={`/pokemon/${item.name}`}
-                className="group rounded-lg border border-neutral-700 px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-                rel="noopener noreferrer"
-              >
-                <h2 className={`text-2xl font-semibold`}>
-                  {item.name}
-                </h2>
-              </Link>
-            ))}
-          </div>
-          <div className="flex justify-between mt-6">
-            <button
-              disabled={curPage === 1}
-              className="border border-neutral-700 rounded-lg p-4 disabled:text-gray-500 disabled:hover:cursor-not-allowed"
-              onClick={() => {
-                setCurPage((prev) => prev - 1)
-              }}
-            >
-              Prev
-            </button>
-            <button
-              className="border border-neutral-700 rounded-lg p-4 disabled:text-gray-500 disabled:hover:cursor-not-allowed"
-              onClick={() => {
-                setCurPage((prev) => prev + 1)
-              }}
-            >
-              Next
-            </button>
+            {pokemon.isSuccess && (
+              <div className="flex justify-center items-center flex-wrap w-full mt-8">
+                {filteredPokemon.map((item) => {
+                  return (
+                    <React.Fragment key={item.name}>
+                      <Link
+                        href={`pokemon/${item.name}`}
+                        className="w-24 md:w-28 bg-white p-3 m-1 sm:m-2 rounded text-center cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-300">
+                        <Image
+                          className="w-20 h-20 md:w-24 md:h-24 flex justify-center items-center"
+                          src={item.image}
+                          alt=""
+                          width={200}
+                          height={200}
+                        />
+                        <p className="capitalize mt-2 text-gray-600 text-center text-xs w-full sm:text-sm font-bold">{item.name}</p>
+                      </Link>
+                    </React.Fragment>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       </main>

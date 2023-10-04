@@ -4,7 +4,6 @@ const qs = require('qs')
 
 export const POKEMON_URL = "https://pokeapi.co/api/v2/"
 
-
 export const appRouter = router({
   hello: procedure
     .input(
@@ -16,40 +15,6 @@ export const appRouter = router({
       return {
         greeting: `hello ${opts.input.text}`,
       };
-    }),
-
-  getAllPosts: procedure
-    .input(
-      z.object({
-        page: z.number()
-      })
-    )
-    .query(async (opts) => {
-      const { input } = opts;
-      const page = input.page
-
-      const fetchPosts = await fetch(`https://gorest.co.in/public/v2/posts${page === 1 ? "" : `?page=${page}`}`);
-      return fetchPosts.json();
-    }),
-
-  getAllUsers: procedure
-    .input(
-      z.object({
-        page: z.number(),
-        name: z.string()
-      })
-    )
-    .query(async (opts) => {
-      const { input } = opts;
-      const { page, name } = input
-
-      const querystring = qs.stringify({
-        page: page === 1 ? 1 : page,
-        name: name ? name : ""
-      })
-
-      const fetchUsers = await fetch(`https://gorest.co.in/public/v2/users?${querystring}`);
-      return fetchUsers.json();
     }),
 
   getPokemons: procedure
@@ -70,8 +35,29 @@ export const appRouter = router({
         name: name ? name : ""
       })
 
-      const url = await fetch(`${POKEMON_URL}/pokemon?${querystring}`)
-      return url.json()
+      // const test = await fetch(`${POKEMON_URL}/pokemon?${querystring}`)
+      //   .then((resp) => resp.json())
+      //   .then(async (allPoke) => {
+      //     return Promise.all(allPoke.results.map(item => {
+      //       return fetch(item.url).then(res => res.json()).then(detailPoke => detailPoke)
+      //     }))
+      //   }).then(data => data)
+
+      const pokemon = await fetch(`${POKEMON_URL}/pokemon?${querystring}`)
+        .then((resp) => resp.json())
+
+      console.log({ pokemon: pokemon.results })
+
+      const pokemonList = pokemon.results.map((result, index) => {
+        const paddedIndex = ("00" + (index + 1)).slice(-3)
+        const image = `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${paddedIndex}.png`
+        return {
+          ...result,
+          image
+        }
+      })
+
+      return pokemonList
 
     })
 });

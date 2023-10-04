@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['raw.githubusercontent.com']
+    domains: ['raw.githubusercontent.com', 'assets.pokemon.com']
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
